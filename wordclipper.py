@@ -156,12 +156,11 @@ class DeleteCheckButton(tkinter.Checkbutton):
         super().__init__(
             master,
             text="Delete",
-            width=15,
             variable=delete_var,
         )
         self.deleete_var = delete_var
         self.master = master
-        self.pack()
+        self.pack(padx=10, anchor=tkinter.W)
 
 
 class SwapCheckButton(tkinter.Checkbutton):
@@ -170,12 +169,11 @@ class SwapCheckButton(tkinter.Checkbutton):
         super().__init__(
             master,
             text="Swap",
-            width=15,
             variable=swap_var
         )
 
         self.master = master
-        self.pack()
+        self.pack(padx=10, anchor=tkinter.W)
 
 
 class ModifyCheckButton(tkinter.Checkbutton):
@@ -183,11 +181,10 @@ class ModifyCheckButton(tkinter.Checkbutton):
     def __init__(self, master, modify_var):
         super().__init__(
             master,
-            text="modify",
-            width=15,
+            text="Modify",
             variable=modify_var
         )
-        self.pack()
+        self.pack(padx=10, anchor=tkinter.W)
 
 
 class CreateNewButton(tkinter.Button):
@@ -244,7 +241,7 @@ class main():
         b3 = SwapCheckButton(root, swap_boolean_var)
         b4 = ModifyCheckButton(root, modify_boolean_var)
         
-        b_debug = ShowDatabaseButton(root)
+        #b_debug = ShowDatabaseButton(root)
 
         root.mainloop()
 
