@@ -12,6 +12,49 @@ def open_db():
         )
     return conn
 
+def ask_button_data(title=None):
+    if title == None:
+        title = tkinter.simpledialog.askstring(
+            'input title',
+            'please input title'
+            )
+
+    if(title != None or title != ''):
+        clip_word = tkinter.simpledialog.askstring(
+            'input clipword',
+            'please input clipword'
+            )
+        
+        link = tkinter.simpledialog.askstring(
+            'input URL',
+            'please input URL'
+            )
+
+        return (title, clip_word, link)
+
+
+def replace_item_to_db(title, clip_word, link):
+    conn = open_db()
+    c = conn.cursor()
+    sql = "SELECT MAX(number) FROM Clipword"
+    c.execute(sql)
+    
+    max_n_cursor = c.fetchone()[0]
+    
+    if max_n_cursor:
+        max_number = max_n_cursor + 1
+    else:
+        max_number = 1
+
+    sql = """
+    REPLACE INTO Clipword(title, clipword, link, number)
+    VALUES (?, ?, ?, ?)
+    """
+
+    data = (title, clip_word, link, max_number)
+    conn.execute(sql, data)
+    conn.close()
+
 
 class WordClipButton(tkinter.Button):
 
@@ -20,7 +63,7 @@ class WordClipButton(tkinter.Button):
     swap_title_1 = ""
     swap_title_2 = ""
 
-    def __init__(self, master, delete_var, swap_var, data):
+    def __init__(self, master, delete_var, swap_var, modify_var, data):
         super().__init__(
             master,
             text=data[0],
@@ -33,6 +76,7 @@ class WordClipButton(tkinter.Button):
         self.url = data[2]
         self.delete_var = delete_var
         self.swap_var = swap_var
+        self.modify_var = modify_var
         self.master = master
         self.update_db_number(self.title, WordClipButton.button_count_int)
         self.pack()
@@ -52,6 +96,9 @@ class WordClipButton(tkinter.Button):
                     WordClipButton.swap_title_1,
                     WordClipButton.swap_title_2
                     )
+
+        elif self.modify_var.get():
+            self.modify_item_in_db(self.title)
 
         else:
             self.clip_word_and_open_link()
@@ -85,6 +132,11 @@ class WordClipButton(tkinter.Button):
         conn.execute(sql_update, (swap_number_1[0], swap_title_2))
         conn.execute(sql_update, (swap_number_2[0], swap_title_1))
         conn.close()
+        self.clear_and_resume()
+
+    def modify_item_in_db(self, title):
+        data = ask_button_data(title)
+        replace_item_to_db(data[0], data[1], data[2])
         self.clear_and_resume()
 
     def update_db_number(self, title, number):
@@ -126,6 +178,18 @@ class SwapCheckButton(tkinter.Checkbutton):
         self.pack()
 
 
+class ModifyCheckButton(tkinter.Checkbutton):
+
+    def __init__(self, master, modify_var):
+        super().__init__(
+            master,
+            text="modify",
+            width=15,
+            variable=modify_var
+        )
+        self.pack()
+
+
 class CreateNewButton(tkinter.Button):
 
     def __init__(self, master):
@@ -134,55 +198,16 @@ class CreateNewButton(tkinter.Button):
             text="--create new--",
             width=15,
             bg="lightblue",
-            command=self.create_new_item_to_db
+            command=self.create_new_button_clicked
             )
         self.master = master
         self.pack()
 
-    def create_new_item_to_db(self):
-        title = tkinter.simpledialog.askstring(
-            'input title',
-            'please input title'
-            )
-
-        if(title == None or title == ''):
-            return
-
-        clip_word = tkinter.simpledialog.askstring(
-            'input clipword',
-            'please input clipword'
-            )
-        
-        link = tkinter.simpledialog.askstring(
-            'input URL',
-            'please input URL'
-            )
-        
-        self.add_item_to_db(title, clip_word, link)
+    def create_new_button_clicked(self):
+        data = ask_button_data()
+        replace_item_to_db(data[0], data[1], data[2])
         self.master.destroy()
         main()
-
-    def add_item_to_db(self, title, clip_word, link):
-        conn = open_db()
-        c = conn.cursor()
-        sql = "SELECT MAX(number) FROM Clipword"
-        c.execute(sql)
-        
-        max_n_cursor = c.fetchone()[0]
-        
-        if max_n_cursor:
-            max_number = max_n_cursor + 1
-        else:
-            max_number = 1
-
-        sql = """
-        REPLACE INTO Clipword(title, clipword, link, number)
-        VALUES (?, ?, ?, ?)
-        """
-
-        data = (title, clip_word, link, max_number)
-        conn.execute(sql, data)
-        conn.close()
 
 
 class main():
@@ -192,6 +217,7 @@ class main():
         
         delete_boolean_var = tkinter.BooleanVar(root)
         swap_boolean_var = tkinter.BooleanVar(root)
+        modify_boolean_var = tkinter.BooleanVar(root)
 
         x = 130
         w = root.winfo_screenwidth()
@@ -205,12 +231,20 @@ class main():
 
         WordClipButton.button_count_int = 0
         for row in db_info:
-            cb = WordClipButton(root, delete_boolean_var, swap_boolean_var, row)
+            cb = WordClipButton(
+                root,
+                delete_boolean_var,
+                swap_boolean_var,
+                modify_boolean_var,
+                row
+                )
         
         b1 = CreateNewButton(root)
         b2 = DeleteCheckButton(root, delete_boolean_var)
         b3 = SwapCheckButton(root, swap_boolean_var)
-        b4 = ShowDatabaseButton(root)
+        b4 = ModifyCheckButton(root, modify_boolean_var)
+        
+        b_debug = ShowDatabaseButton(root)
 
         root.mainloop()
 
