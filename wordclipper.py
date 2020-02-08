@@ -87,6 +87,9 @@ class WordClipButton(tkinter.Button):
         conn.close()
         self.clear_and_resume()
 
+    def modify_item_in_db(self, title):
+        pass
+
     def update_db_number(self, title, number):
         conn = open_db()
         sql_update = "UPDATE Clipword SET number = ? WHERE title = ?"
@@ -123,6 +126,18 @@ class SwapCheckButton(tkinter.Checkbutton):
         )
 
         self.master = master
+        self.pack()
+
+
+class ModifyCheckButton(tkinter.Checkbutton):
+
+    def __init__(self, master, modify_var):
+        super().__init__(
+            master,
+            text="modify",
+            width=15,
+            variable=modify_var
+        )
         self.pack()
 
 
