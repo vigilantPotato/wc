@@ -33,25 +33,26 @@ def ask_button_data(title=None):
         return (title, clip_word, link)
 
 
-def replace_item_to_db(title, clip_word, link):
+def replace_item_to_db(title, clip_word, link, number=None):
     conn = open_db()
-    c = conn.cursor()
-    sql = "SELECT MAX(number) FROM Clipword"
-    c.execute(sql)
-    
-    max_n_cursor = c.fetchone()[0]
-    
-    if max_n_cursor:
-        max_number = max_n_cursor + 1
-    else:
-        max_number = 1
+    if number == None:
+        c = conn.cursor()
+        sql = "SELECT MAX(number) FROM Clipword"
+        c.execute(sql)
+        
+        max_n_cursor = c.fetchone()[0]
+        
+        if max_n_cursor:
+            number = max_n_cursor + 1
+        else:
+            number = 1
 
     sql = """
     REPLACE INTO Clipword(title, clipword, link, number)
     VALUES (?, ?, ?, ?)
     """
 
-    data = (title, clip_word, link, max_number)
+    data = (title, clip_word, link, number)
     conn.execute(sql, data)
     conn.close()
 
@@ -135,8 +136,14 @@ class WordClipButton(tkinter.Button):
         self.clear_and_resume()
 
     def modify_item_in_db(self, title):
+        conn = open_db()
+        c = conn.cursor()
+        sql_select = "SELECT number FROM Clipword WHERE title = ?"
+        c.execute(sql_select, (title,))
+        number = c.fetchone()
+
         data = ask_button_data(title)
-        replace_item_to_db(data[0], data[1], data[2])
+        replace_item_to_db(data[0], data[1], data[2], number[0])
         self.clear_and_resume()
 
     def update_db_number(self, title, number):
